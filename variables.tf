@@ -18,7 +18,7 @@ variable "container_image" {
 variable "container_port" {
   description = "Port the container listens on (also the port exposed on the host)."
   type        = number
-  default     = 80
+  default     = 8001
 }
 
 variable "github_username" {
