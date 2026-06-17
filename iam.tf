@@ -8,7 +8,7 @@
 # Role assumed by the EC2 host (principal: ec2.amazonaws.com).
 resource "aws_iam_role" "ec2_instance" {
   # TODO: name, assume_role_policy (trust ec2.amazonaws.com)
-  name = "ec2-instance-role"
+  name = "ecs-demo-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -33,7 +33,7 @@ resource "aws_iam_role_policy_attachment" "ecs_instance" {
 
 # Instance profile wrapping the role (this is what the launch template references).
 resource "aws_iam_instance_profile" "ecs_instance" {
-  name = "ecs-ec2-instance-profile"
+  name = "ecs-demo-ec2-instance-profile"
   role = aws_iam_role.ec2_instance.name
 }
 
@@ -41,7 +41,7 @@ resource "aws_iam_instance_profile" "ecs_instance" {
 
 # Role assumed by ECS to set up the task (principal: ecs-tasks.amazonaws.com).
 resource "aws_iam_role" "task_execution" {
-  name = "ecs-project-role"
+  name = "ecs-demo-project-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
