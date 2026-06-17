@@ -85,4 +85,3 @@ jobs:
           name: tf-plan-output
       - name: terraform apply
         run: terraform apply -input=false tfplan
-
