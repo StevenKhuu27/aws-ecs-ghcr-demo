@@ -1,0 +1,88 @@
+name: terraform
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  tf-lint:
+    name: terraform fmt + validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.6
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive .
+
+      - name: terraform init
+        run: terraform init -input=false -backend=false
+
+      - name: terraform validate
+        run: terraform validate -no-color
+
+  tf-plan:
+    name: terraform plan
+    runs-on: ubuntu-latest
+    needs: tf-lint
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TF_VAR_container_image: ${{ vars.CONTAINER_IMAGE }}
+      TF_VAR_ingress_cidr:    ${{ secrets.MY_IP_CIDR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+            terraform_version: 1.15.6
+            terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-southeast-2
+      - name: terraform init
+        run: terraform init -input=false
+      - name: terraform plan
+        run: terraform plan -input=false -out=tfplan
+      - name: upload plan artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tf-plan-output
+          path: tfplan
+
+  tf-apply:
+    name: terraform apply
+    runs-on: ubuntu-latest
+    needs: tf-plan
+    environment: manual-gate
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TF_VAR_container_image: ${{ vars.CONTAINER_IMAGE }}
+      TF_VAR_ingress_cidr:    ${{ secrets.MY_IP_CIDR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+            terraform_version: 1.15.6
+            terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-southeast-2
+      - name: terraform init
+        run: terraform init -input=false
+      - name: download tfplan artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: tf-plan-output
+      - name: terraform apply
+        run: terraform apply -input=false tfplan
+

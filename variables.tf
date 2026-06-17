@@ -24,12 +24,14 @@ variable "container_port" {
 variable "github_username" {
   description = "GitHub username used to pull the private GHCR image."
   type        = string
+  default     = ""
 }
 
 variable "github_token" {
   description = "GitHub Personal Access Token (classic) with read:packages scope. Only needed for PRIVATE GHCR images."
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "ingress_cidr" {
