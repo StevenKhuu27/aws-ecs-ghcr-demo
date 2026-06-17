@@ -5,6 +5,7 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   tf-lint:
@@ -85,3 +86,29 @@ jobs:
           name: tf-plan-output
       - name: terraform apply
         run: terraform apply -input=false tfplan
+
+  tf-destroy:
+    name: terraform destroy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment: manual-gate
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      TF_VAR_container_image: ${{ vars.CONTAINER_IMAGE }}
+      TF_VAR_ingress_cidr:    ${{ secrets.MY_IP_CIDR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+            terraform_version: 1.15.6
+            terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-southeast-2
+      - name: terraform init
+        run: terraform init -input=false
+      - name: terraform destroy
+        run: terraform destroy -auto-approve -input=false
