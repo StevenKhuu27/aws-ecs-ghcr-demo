@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored (secrets!).
+
+# container_image = "ghcr.io/<you>/<app>:latest"
+# github_username = "<you>"
+# github_token    = "<PAT with read:packages>"
+# ingress_cidr    = "<your.ip>/32"   # lock down; default is 0.0.0.0/0
